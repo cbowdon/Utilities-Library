@@ -5,10 +5,11 @@
          "stream-utils.rkt")
 
 (provide (contract-out 
-          [csv->stream (-> string? stream?)]
+          [csv->stream (-> (or/c string? path?) stream?)]
           [split-string (-> string? (or/c string? char?) (listof string?))]
           [string-empty? (-> string? boolean?)]
-          [string-not-empty? (-> string? boolean?)])
+          [string-not-empty? (-> string? boolean?)]
+          [csvs-in-dir (-> (or/c string? path?) (listof path?))])
          select-columns)
 
 (define (csv->stream filename)
@@ -44,6 +45,11 @@
                (λ (x) (list->vector (map (λ (i) (list-ref x i)) (cons a b)))) 
                strm)]))
 
+
+(define (csvs-in-dir data-dir)
+  (map
+   (λ (x) (build-path data-dir x))
+   (filter (λ (x) (regexp-match ".csv$" x)) (directory-list data-dir))))
 
 ;(require plot)
 ;(define-syntax plot-columns
