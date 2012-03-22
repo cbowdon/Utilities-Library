@@ -9,8 +9,7 @@
           [split-string (-> string? (or/c string? char?) (listof string?))]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)])
-         select-columns
-         plot-columns)
+         select-columns)
 
 (define (csv->stream filename)
   (define (parse-port in)
@@ -46,10 +45,10 @@
                strm)]))
 
 
-(require plot)
-(define-syntax plot-columns
-  (syntax-rules ()
-    [(plot-columns strm a b) (plot (points (select-columns strm a b)))]
-    [(plot-columns strm a b c) (plot3d (points3d (select-columns strm a b c)))]))
+;(require plot)
+;(define-syntax plot-columns
+ ; (syntax-rules ()
+  ;  [(plot-columns strm a b) (plot (points (select-columns strm a b)))]
+   ; [(plot-columns strm a b c) (plot3d (points3d (select-columns strm a b c)))]))
 
-(define k (csv->stream "testdata.csv"))
+;(define k (csv->stream "testdata.csv"))
