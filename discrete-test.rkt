@@ -4,12 +4,16 @@
          racket/stream
          Lib/discrete)
 
+;; enumeration function
+; surely I'm reinventing the wheel here?
 (define (enumerate min max inc)
   (define (en-iter current ls)
     (if [<= current max]
         (en-iter (+ current inc) (cons current ls))
         ls))
   (reverse (en-iter min '())))
+
+;; test cases
 
 (test-case
  "Discretize 2d"
@@ -25,6 +29,9 @@
    (for-each (λ (x y) (check-equal? (dsurf x y) (surf -1.0 -1.0))) (enumerate -1.0 0.0 0.1) (enumerate -1.0 0.0 0.1))
    (for-each (λ (x y) (check-equal? (dsurf x y) (surf 0.0 0.0))) (enumerate 0.0 1.0 0.1) (enumerate 0.0 1.0 0.1))
    (for-each (λ (x y) (check-equal? (dsurf x y) (surf 1.0 1.0))) (enumerate 1.0 2.0 0.1) (enumerate 1.0 2.0 0.1))))
+
+
+;; visualization
 
 (require plot)
 

@@ -21,7 +21,7 @@
    "select-columns works"
    (let ([data (csv->stream "testdata.csv")])
      (check-true (stream? (select-columns data 1)))
-     (check-equal? (stream-ref (select-columns data 1) 0) (vector 27.7))
+     (check-equal? (stream-ref (select-columns data 1) 0) 27.7)
      (check-equal? (stream-ref (select-columns data 1 2) 0) (vector 27.7 34000))))
   ;)
 

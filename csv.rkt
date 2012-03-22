@@ -9,7 +9,8 @@
           [split-string (-> string? (or/c string? char?) (listof string?))]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)])
-         select-columns)
+         select-columns
+         plot-columns)
 
 (define (csv->stream filename)
   (define (parse-port in)
@@ -38,22 +39,12 @@
 ; (variable number of indices given) 
 ; as list of vectors for plotting
 
-(define-syntax select-columns
-  (syntax-rules ()
-    [(select-columns strm a) (select-single-column strm a)]
-    [(select-columns strm a b ...) (select-multiple-columns strm (list a b ...))]))
+(define (select-columns strm a . b)
+  (cond [(null? b) (stream-map (λ (x) (list-ref x a)) strm)]
+        [else (stream-map 
+               (λ (x) (list->vector (map (λ (i) (list-ref x i)) (cons a b)))) 
+               strm)]))
 
-(define (select-single-column strm index)  
-  (stream-map 
-   (lambda (x) (vector (list-ref x index))) strm))
-
-(define (select-multiple-columns strm list-of-indices)
-  (stream-map 
-   (lambda (x) (list->vector                 
-                (map 
-                 (lambda (i) (list-ref x i)) 
-                 list-of-indices))) 
-   strm))
 
 (require plot)
 (define-syntax plot-columns
@@ -61,4 +52,4 @@
     [(plot-columns strm a b) (plot (points (select-columns strm a b)))]
     [(plot-columns strm a b c) (plot3d (points3d (select-columns strm a b c)))]))
 
-;(define k (csv->stream "testdata.csv"))
+(define k (csv->stream "testdata.csv"))
