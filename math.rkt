@@ -6,7 +6,8 @@
 (provide (contract-out 
           [average (->  numeric-data/c number?)]
           [variance (-> numeric-data/c number?)]
-          [st-dev (-> numeric-data/c number?)]))
+          [st-dev (-> numeric-data/c number?)]
+          [sum (-> numeric-data/c number?)]))
 
 (define numeric-data/c (or/c number? (listof number?) stream?))
 
@@ -23,6 +24,10 @@
   (define (stravg x) (/ (stream-fold + 0 x) (stream-length x)))
   (generic avg stravg b))
         
+(define (sum . b)
+  (define (s x) (foldl + 0 x))
+  (define (ss x) (stream-fold + 0 x))
+  (generic s ss b))
 
 ;; variance
 (define (variance . b)
@@ -34,17 +39,18 @@
 (define (st-dev . b)
   (sqrt (variance (car b))))
 
-;(require rackunit)
-;
+(require rackunit)
+
 ;(test-case
 ; "average"
 ; (check-equal? (average 1 2 3 4) 5/2)
 ; (check-equal? (average '(1 2 3 4)) 5/2)
 ; (check-equal? (average (stream 1 2 3 4)) 5/2))
-;
+;;
 ;(test-case
 ; "wiki"
 ; (let ([data (list 2 4 4 4 5 5 7 9)])
+;   (check-equal? (sum data) (foldl + 0 data))
 ;   (check-equal? (average data) 5)
 ;   (check-equal? (variance data) 4)
 ;   (check-equal? (st-dev data) 2)))

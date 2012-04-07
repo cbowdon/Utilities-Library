@@ -1,5 +1,6 @@
 #lang racket/base
 (require racket/math
+         racket/generator
          racket/contract)
 
 (provide (contract-out
@@ -27,5 +28,3 @@
     (if [hash-has-key? options unit]
         (exact->inexact (/ size-in-bytes (expt base (hash-ref options unit))))
         (error "Size unit not recognised:" unit))))
-
-

@@ -6,7 +6,7 @@
 
 (provide (contract-out 
           [csv->stream (-> (or/c string? path?) stream?)]
-          [csv-gen (-> (or/c string? path?) generator?)]
+          [file->generator (-> (or/c string? path?) generator?)]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
           [csvs-in-dir (-> (or/c string? path?) (listof path?))])
@@ -20,7 +20,7 @@
 
 (define (csv->stream filename)
   (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (regexp-split ",|\r|\n|\r\n|[:cntrl:]" x))))
-              (sequence->stream (in-producer (csv-gen filename) 'stop))))
+              (sequence->stream (in-producer (file->generator filename) 'stop))))
 
 (define (string-empty? str)
   (equal? 0 (string-length str)))
@@ -58,10 +58,10 @@
    (λ (x) (build-path data-dir x))
    (filter (λ (x) (regexp-match ".csv$" x)) (directory-list data-dir))))
 
-;; csv-gen
+;; file->generator
 ;; a filename ->
 ;; a generator that returns successive lines from the file
-(define (csv-gen filename)
+(define (file->generator filename)
   (generator ()
              ;; cg-helper
              ;; pos ->
