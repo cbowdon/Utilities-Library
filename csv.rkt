@@ -7,7 +7,6 @@
 (provide (contract-out 
           [csv->stream (-> (or/c string? path?) stream?)]
           [csv-gen (-> (or/c string? path?) generator?)]
-          [split-string (-> string? (or/c string? char?) (listof string?))]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
           [csvs-in-dir (-> (or/c string? path?) (listof path?))])
@@ -20,11 +19,8 @@
 ;  (call-with-input-file filename parse-port))
 
 (define (csv->stream filename)
-  (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (split-string x ","))))
+  (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (regexp-split ",|\r|\n|\r\n|[:cntrl:]" x))))
               (sequence->stream (in-producer (csv-gen filename) 'stop))))
-
-(define (split-string str delimiter)
-  (regexp-split delimiter str))
 
 (define (string-empty? str)
   (equal? 0 (string-length str)))
