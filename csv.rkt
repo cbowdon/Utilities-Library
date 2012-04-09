@@ -2,7 +2,7 @@
 (require racket/stream
          racket/generator
          racket/contract
-         "stream-utils.rkt")
+         Lib/stream-utils)
 
 (provide (contract-out 
           [csv->stream (-> (or/c string? path?) stream?)]
