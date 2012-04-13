@@ -2,25 +2,27 @@
 (require racket/stream
          racket/generator
          racket/contract
+         racket/port
          Lib/stream-utils)
 
 (provide (contract-out 
           [csv->stream (-> (or/c string? path?) stream?)]
+          [csv->list (-> (or/c string? path?) stream?)]
           [file->generator (-> (or/c string? path?) generator?)]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
           [csvs-in-dir (-> (or/c string? path?) (listof path?))])
          select-columns)
 
-;(define (csv->stream filename)
-;  (define (parse-port in)
-;    (stream-map (lambda (x) (parse-by-probable-type (filter string-not-empty? (split-string x ","))))
-;                (port->lines in)))
-;  (call-with-input-file filename parse-port))
+(define (csv->list filename)
+  (define (parse-port in)
+    (map (lambda (x) (parse-by-probable-type (filter string-not-empty? (regexp-split "," x))))
+         (port->lines in)))
+  (call-with-input-file filename parse-port))
 
 (define (csv->stream filename)
-  (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (regexp-split ",|\r|\n|\r\n|[:cntrl:]" x))))
-              (sequence->stream (in-producer (file->generator filename) 'stop))))
+  (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (regexp-split ",|\t|\r|\n|\r\n|[:cntrl:]" x))))
+              (stream-filter (λ (x) (not (eof-object? x))) (sequence->stream (in-producer (file->generator filename) 'stop)))))
 
 (define (string-empty? str)
   (equal? 0 (string-length str)))
@@ -88,7 +90,7 @@
                             ;     eof
                             (l&p-iter (sub1 count) (cons new-line result)))]))                 
                  (begin (file-position port pos)
-                        (l&p-iter 100 '())))
+                        (l&p-iter 1000 '())))
                (call-with-input-file filename
                  (λ (in) (lines-and-pos in))))            
              
@@ -116,5 +118,3 @@
 ; (syntax-rules ()
 ;  [(plot-columns strm a b) (plot (points (select-columns strm a b)))]
 ; [(plot-columns strm a b c) (plot3d (points3d (select-columns strm a b c)))]))
-
-;(define k (csv->stream "testdata.csv"))
