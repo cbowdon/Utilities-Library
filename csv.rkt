@@ -3,7 +3,7 @@
          racket/generator
          racket/contract
          racket/port
-         Lib/stream-utils)
+         lib/stream-utils)
 
 (provide (contract-out 
           [csv->stream (-> (or/c string? path?) stream?)]
