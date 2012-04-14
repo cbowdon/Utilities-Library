@@ -4,11 +4,14 @@
          racket/stream)
 
 (provide (contract-out 
-          [average (->  numeric-data/c number?)]
-          [variance (-> numeric-data/c number?)]
-          [st-dev (-> numeric-data/c number?)]
-          [sum (-> numeric-data/c number?)]
-          [poisson-error (-> numeric-data/c number?)]))
+          [average (->* () #:rest numeric-data/c number?)]
+          [variance (->* () #:rest numeric-data/c number?)]
+          [st-dev (->* () #:rest numeric-data/c number?)]
+          [sum (->* () #:rest numeric-data/c number?)]
+          [poisson-error (->* () #:rest numeric-data/c number?)]
+          [gauss (->* (number?)
+                      (#:height number? #:mu number? #:sigma number?)
+                      number?)]))
 
 (define numeric-data/c (or/c number? (listof number?) stream?))
 
@@ -45,23 +48,7 @@
   (* (average (car b))
      (/ (sqrt (sum (car b))) (sum (car b)))))
 
-(require rackunit)
-
-(test-case
- "average"
- (check-equal? (average 1 2 3 4) 5/2)
- (check-equal? (average '(1 2 3 4)) 5/2)
- (check-equal? (average (stream 1 2 3 4)) 5/2))
-
-(test-case
- "wiki"
- (let ([data (list 2 4 4 4 5 5 7 9)])
-   (check-equal? (sum data) (foldl + 0 data))
-   (check-equal? (average data) 5)
-   (check-equal? (variance data) 4)
-   (check-equal? (st-dev data) 2)))
-
-(test-case
- "poisson-error" 
- (check-equal? (poisson-error 100) 10)
- (check-equal? (poisson-error (build-list 10 (λ (x) 10))) 1))
+;; gauss
+(define (gauss x #:height [h 1] #:mu [u 0] #:sigma [o 1])
+  (* h (exp (/ (* -1 (expt (- x u) 2))
+               (* 2 o o)))))
