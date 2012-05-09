@@ -3,6 +3,12 @@
 (require lib/math
          rackunit)
 
+(define (check-vector-equal? v1 v2 eps)
+  (define (eq-w/err? a b) (= (vector-length v1) 
+                             (vector-length v2) 
+                             (vector-count (λ (x y) (> eps (abs (- x y)))) a b)))
+  (check eq-w/err? v1 v2 (format "v1:~a not equal to v2:~a" v1 v2)))
+
 (test-case
  "average"
  (check-equal? (average 1 2 3 4) 5/2)
@@ -29,8 +35,69 @@
  ;; and default args are height = 1, mu = 0, sigma = 1:
  (check-equal? (gauss 0) 1))
 
-(require plot)
-(plot (list (function gauss -5 5)
-            (function (λ (x) (gauss x #:height 1 #:mu -2 #:sigma 3)) -5 5)))
- 
+(test-case
+ "linear regression"
+ (let ([datasetA '( #(1 0.5) #(2 1.0) #(3 1.5) #(4 2.0))]
+       [datasetB '( #(1 1.0) #(2 2.0) #(3 3.0) #(4 4.0))]
+       [datasetC '( #(0 0.5) #(1 1.0) #(2 1.5) #(3 2.0))])
+   (check-vector-equal? (linear-regression datasetA) #(0.5 0.0) 1e-4)
+   (check-vector-equal? (linear-regression datasetB) #(1.0 0.0) 1e-4)
+   (check-vector-equal? (linear-regression datasetC) #(0.5 0.5) 1e-4)))
+
+(test-case
+ "make-linear-equation"
+ (check-equal? ((make-linear-equation 0.5 2) 1) 2.5)
+ (check-equal? ((make-linear-equation #(0.5 2)) 1) 2.5)
+ (check-equal? ((make-linear-equation '(0.5 2)) 1) 2.5))
+
+(test-case
+ "rank"
+ (let ([sorted-lists
+        (list '(0 1 2 3 4)
+              '(0 1 1 2 5)
+              '(0 0 0 0 1)
+              '(1 2 2 2 3)
+              '(1 2 2 3 3)
+              '(1 2 3 4 5 6 7)
+              '(1 1 2 2 5 6 7)
+              '(1 1 1 3 5 6 7)
+              '(1 1 1 1 5 6 6)
+              '(1 1 1 1 1 1 1)
+              '(1)
+              '())]
+       [answers
+        (list '(1 2 3 4 5)
+              '(1 5/2 5/2 4 5)
+              '(5/2 5/2 5/2 5/2 5)
+              '(1 3 3 3 5)
+              '(1 5/2 5/2 9/2 9/2)
+              '(1 2 3 4 5 6 7)
+              '(3/2 3/2 7/2 7/2 5 6 7)
+              '(2 2 2 4 5 6 7)
+              '(5/2 5/2 5/2 5/2 5 13/2 13/2)
+              '(4 4 4 4 4 4 4)
+              '(1)
+              '())])
+   (for-each
+    (λ (x y) (check-equal? (rank x) y))
+    sorted-lists
+    answers)))
+
+
+;(require plot)
+;(test-case
+; "spearman's rank"
+; (let* ([n 10]
+;        [correlated-data (map (λ (x) (vector x (sin x))) (build-list n values))]
+;        [semi-correlated-data (map (λ (x) (vector x (random (add1 x)))) (build-list n values))]
+;        [uncorrelated-data (map (λ (x) (vector x 2.5)) (build-list n values))])
+;   (check-equal? (spearman correlated-data) 1.0)
+;   (check-equal? (spearman semi-correlated-data) 0.5)
+;   (check-equal? (spearman uncorrelated-data) 0.0)
+;   (plot (list
+;          (points correlated-data #:color 'green)
+;          (points semi-correlated-data #:color 'orange)
+;          (points uncorrelated-data #:color 'red)))
+;   ))
+
 
