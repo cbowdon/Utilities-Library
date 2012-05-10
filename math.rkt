@@ -17,7 +17,9 @@
                       number?)]
           [linear-regression (-> (listof vector?) vector?)]
           [make-linear-equation (->* () #:rest (or/c vector? list?) procedure?)]
+          [sort-vectors (-> procedure? (listof vector?) exact-nonnegative-integer? (listof vector?))]
           [rank (-> (listof number?) (listof number?))]
+          [pearson (-> (listof vector?) number?)]
           [spearman (-> (listof vector?) number?)]))
 
 (define numeric-data/c (or/c number? (listof number?) stream?))
@@ -142,12 +144,31 @@
   ;; start
   (rank-iter 1 sorted-list '()))
 
-(define (spearman lv)
+(define (pearson list-of-vectors)  
+  (define (single-col lv index) (map (λ (x) (vector-ref x index)) lv))
+  (define (ps as bs a0 b0) (foldl + 0 (map (λ (a b) (* (- a a0) (- b b0))) as bs)))
+  (define (ss as a0) (foldl + 0 (map (λ (a) (* (- a a0) (- a a0))) as)))
+  (let* ([xs (single-col list-of-vectors 0)]
+         [ys (single-col list-of-vectors 1)]
+         [x0 (average xs)]
+         [y0 (average ys)]
+         [dnm1 (ss xs x0)]
+         [dnm2 (ss ys y0)])
+    (if [or (= 0 dnm1) (= 0 dnm2)] ; zero correlation
+        0
+        (/ (ps xs ys x0 y0) 
+           (* (sqrt dnm1) (sqrt dnm2))))))
+
+(define (sort-vectors proc list-of-vectors index)
+  (sort list-of-vectors 
+        (λ (v1 v2) (proc (vector-ref v1 index) (vector-ref v2 index)))))
+
+(define (spearman list-of-vectors)
   (define (x-< v1 v2)
     (< (vector-ref v1 0) (vector-ref v2 0)))
-  (let ([x-sorted (sort lv x-<)])
+  (let ([x-sorted (sort list-of-vectors x-<)])
     ;; sort list by x
     ;; assign rank
-    ;; do spearman sum
+    ;; do spearman sum: i.e. do pearson's on the ranks
     1.0
     ))

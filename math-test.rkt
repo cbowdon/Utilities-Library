@@ -83,6 +83,20 @@
     sorted-lists
     answers)))
 
+(test-case
+ "pearson"
+ (let* ([x (build-list 10 values)]
+        [y (build-list 10 (λ (i) (* i 2)))]
+        [z (build-list 10 (λ (i) (random 10)))]
+        [a (make-list 10 3)]
+        [data0 (map vector x y)]
+        [data1 (map vector x z)]
+        [data2 (map vector x a)])
+   (check-equal? (pearson data0) 1.0)
+   (check-true (< (abs (pearson data1)) 0.8))
+   (check-equal? (pearson data2) 0)))
+
+
 
 ;(require plot)
 ;(test-case

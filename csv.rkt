@@ -11,7 +11,8 @@
           [file->generator (-> (or/c string? path?) generator?)]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
-          [csvs-in-dir (-> (or/c string? path?) (listof path?))])
+          [csvs-in-dir (-> (or/c string? path?) (listof path?))]
+          [single-column (-> stream? number? stream?)])
          select-columns)
 
 (define (csv->list filename)
@@ -54,6 +55,8 @@
                (λ (x) (list->vector (map (λ (i) (list-ref x i)) (cons a b)))) 
                strm)]))
 
+(define (single-column strm index)
+  (stream-map (λ (x) (vector-ref x index)) strm))
 
 (define (csvs-in-dir data-dir)
   (map

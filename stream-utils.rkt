@@ -7,7 +7,7 @@
          (contract-out
           [stream-print (-> (or/c stream? list?) any)]))
 
-
+;; stream-mapx... using stream-append might not be best idea!
 (define (stream-mapx proc a . b)
   (define (stream-iter proc los result)
     (cond [(ormap stream-empty? los) result]

@@ -42,12 +42,18 @@
  (check-equal? (stream-first (csv->stream "testdata.csv")) (list 337316 27.7 34000 73377 9594870 5024327)))
 
 (test-case
- "select-columns works"
+ "select-columns"
  (let ([data (csv->stream "testdata.csv")])
    (check-true (stream? (select-columns data 1)))
    (check-equal? (stream-ref (select-columns data 1) 0) 27.7)
    (check-equal? (stream-ref (select-columns data 1 2) 0) (vector 27.7 34000))))
 
+(test-case 
+ "single-column"
+ (let ([data (select-columns (csv->stream "testdata.csv") 1 2 3)])
+   (check-true (stream? (single-column data 2)))
+   (check-true (number? (stream-first (single-column data 2))))
+   (check-equal? (stream-first (single-column data 2)) 73377)))
 
 ;; fill-buffer
 ;; pos ->
