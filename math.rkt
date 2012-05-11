@@ -7,6 +7,7 @@
 
 (provide (contract-out
           [!= (-> number? number? boolean?)]
+          [sqr (-> number? number?)]
           [average (->* () #:rest numeric-data/c number?)]
           [variance (->* () #:rest numeric-data/c number?)]
           [st-dev (->* () #:rest numeric-data/c number?)]
@@ -25,6 +26,7 @@
 (define numeric-data/c (or/c number? (listof number?) stream?))
 
 (define (!= x y) (not (= x y)))
+(define (sqr x) (* x x))
 
 ;; base for parsing numeric-data/c
 (define (generic normal-proc stream-proc b)
@@ -167,8 +169,7 @@
   (define (x-< v1 v2)
     (< (vector-ref v1 0) (vector-ref v2 0)))
   (let ([x-sorted (sort list-of-vectors x-<)])
-    ;; sort list by x
-    ;; assign rank
+    ;; assign ranks
     ;; do spearman sum: i.e. do pearson's on the ranks
     1.0
     ))

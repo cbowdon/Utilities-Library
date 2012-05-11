@@ -17,7 +17,7 @@
 
 (define (csv->list filename)
   (define (parse-port in)
-    (map (lambda (x) (parse-by-probable-type (filter string-not-empty? (regexp-split "," x))))
+    (map (lambda (x) (parse-by-probable-type (filter string-not-empty? (regexp-split ",|\t|\r|\n|\r\n|[:cntrl:]" x))))
          (port->lines in)))
   (call-with-input-file filename parse-port))
 
@@ -56,7 +56,8 @@
                strm)]))
 
 (define (single-column strm index)
-  (stream-map (λ (x) (vector-ref x index)) strm))
+  (define ref (if (vector? (stream-first strm)) vector-ref list-ref))
+  (stream-map (λ (x) (ref x index)) strm))
 
 (define (csvs-in-dir data-dir)
   (map
