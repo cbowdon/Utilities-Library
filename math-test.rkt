@@ -83,6 +83,13 @@
     sorted-lists
     answers)))
 
+(define test-array 
+  (map vector
+       (build-list 10 (λ (x) (random 100)))
+       (build-list 10 (λ (x) (random 100)))))
+
+
+
 (test-case
  "pearson"
  (let* ([x (build-list 10 values)]

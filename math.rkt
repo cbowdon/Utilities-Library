@@ -18,8 +18,8 @@
                       number?)]
           [linear-regression (-> (listof vector?) vector?)]
           [make-linear-equation (->* () #:rest (or/c vector? list?) procedure?)]
-          [sort-vectors (-> procedure? (listof vector?) exact-nonnegative-integer? (listof vector?))]
-          [rank (-> (listof number?) (listof number?))]
+          [column-sort (-> procedure? (listof vector?) exact-nonnegative-integer? (listof vector?))]
+          [rank (-> (listof (or/c number? (listof number?) vector?)) (listof number?))]
           [pearson (-> (listof vector?) number?)]
           [spearman (-> (listof vector?) number?)]))
 
@@ -103,6 +103,15 @@
   ;; the first is a simple counter, until a tie (repeat) is spotted
   ;; the second works out the average ranking for the repeats before giving back
   
+  ;; accessors
+  (define (accessor-type lst-acc index)
+    (cond [(or (empty? sorted-list) (number? (car sorted-list))) lst-acc]          
+          [(vector? (car sorted-list)) (λ (x) (vector-ref (lst-acc x) index))]          
+          [(list? (car sorted-list)) (λ (x) (list-ref (lst-acc x) index))]
+          [else (error "Unknown input type:" (car sorted-list))]))
+  (define get1st (accessor-type car 0))
+  (define get2nd (accessor-type cadr 0))
+  
   ;; if first two elements not equal, should return cons index+1 onto result
   ;; else should divert to when-same
   ;; rank of first item, input seq, results to cons onto
@@ -113,7 +122,7 @@
     (cond [(empty? input) (reverse result)]
           [(empty? (cdr input)) (reverse (cons n result))]
           ;; repeat found: pass directly to when-same
-          [(= (car input) (cadr input)) (when-same n input result (car input))]
+          [(= (get1st input) (get2nd input)) (when-same n input result (get1st input))]
           ;; no repeat: add rank=n to results, inc n, move down list
           [else (rank-iter (add1 n) (cdr input) (cons n result))]))
   
@@ -126,7 +135,7 @@
     (define (new-result n-same sum-same)    
       (cons-repeat (/ sum-same n-same) result #:repeat n-same))
     (define (ws-iter n n-same sum-same input)
-      (cond [(or (empty? input) (!= (car input) repeat-term))
+      (cond [(or (empty? input) (!= (get1st input) repeat-term))
              ;; empty/no repeat: pass to rank-iter with appropriate n, input and result w/ avgs
              (rank-iter (add1 n) input (new-result n-same sum-same))]
             [else 
@@ -135,6 +144,7 @@
     (ws-iter n-of-first 1 n-of-first (cdr input-list)))
   
   ;; utility: faster than appending I hope
+  ;; TODO: profile vs (append (make-list n x) results)
   (define (cons-repeat a b #:repeat [n 1])
     (let loop ([count n]
                [result b])
@@ -161,9 +171,9 @@
         (/ (ps xs ys x0 y0) 
            (* (sqrt dnm1) (sqrt dnm2))))))
 
-(define (sort-vectors proc list-of-vectors index)
+(define (column-sort proc list-of-vectors column-index)
   (sort list-of-vectors 
-        (λ (v1 v2) (proc (vector-ref v1 index) (vector-ref v2 index)))))
+        (λ (v1 v2) (proc (vector-ref v1 column-index) (vector-ref v2 column-index)))))
 
 (define (spearman list-of-vectors)
   (define (x-< v1 v2)
