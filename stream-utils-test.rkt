@@ -1,7 +1,7 @@
 #lang racket/base
 (require rackunit
          racket/stream
-         "stream-utils.rkt")
+         lib/stream-utils)
 
 (define distance (in-range 0 35 5))
 (define shielded '(20 7 3.5 2 1.5 1 1))
@@ -21,7 +21,8 @@
  (check-equal? (stream-first (stream-mapx vector distance shielded unshielded)) (vector 0 20 75))
  (check-equal? (stream-first (stream-rest (stream-mapx vector distance))) (vector 5))
  (check-equal? (stream-first (stream-rest (stream-mapx vector distance shielded))) (vector 5 7))
- (check-equal? (stream-first (stream-rest (stream-mapx vector distance shielded unshielded))) (vector 5 7 25)))
+ (check-equal? (stream-first (stream-rest (stream-mapx vector distance shielded unshielded))) (vector 5 7 25))
+ (check-equal? (stream->list (stream-mapx vector unshielded shielded)) (map vector unshielded shielded)))
 
 (test-case
  "stream-mapx works on shortest stream only"

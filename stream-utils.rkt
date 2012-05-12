@@ -2,29 +2,23 @@
 (require racket/stream
          racket/contract)
 
-(provide stream-mapx
-         streamof
+(provide streamof
          (contract-out
+          [stream-mapx (->* (procedure? stream?)                            
+                            #:rest stream?
+                            stream?)]
           [stream-print (-> (or/c stream? list?) any)]))
 
-;; stream-mapx... using stream-append might not be best idea!
+;; stream-map for multiple sequences
 (define (stream-mapx proc a . b)
-  (define (stream-iter proc los result)
-    (cond [(ormap stream-empty? los) result]
-          [else
-           (stream-iter
-            proc
-            (map stream-rest los)
-            (stream-append 
-             result
-             (stream-cons (apply proc (map stream-first los)) empty-stream)))]))
-  (stream-iter proc (cons a b) empty-stream))
-
-; macro to do the same. 
-;(define-syntax stream-mapx
-;  (syntax-rules ()
-;    [(stream-mapx proc a) (stream-map proc a)]
-;    [(stream-mapx proc a b ...) (stream-iter proc (list a b ...) empty-stream)]))
+  (define (sm-rec los)
+    (cond [(ormap stream-empty? los)
+           empty-stream]
+          [else   
+           (stream-cons
+            (apply proc (map stream-first los))
+            (sm-rec (map stream-rest los)))]))
+  (sm-rec (cons a b)))
 
 (define (stream-print x)
   (stream-for-each displayln x))
