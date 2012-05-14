@@ -89,9 +89,9 @@
     (vector gradient intercept)))
 
 (define (make-linear-equation  . e)  
-  (cond [(vector? (car e)) (lambda (x) (+ (* x (vector-ref (car e) 0)) (vector-ref (car e) 1)))]
-        [(and (list? e) (number? (car e))) (lambda (x) (+ (* x (car e)) (cadr e)))]
-        [(and (list? e) (list? (car e))) (lambda (x) (+ (* x (caar e)) (cadar e)))]
+  (cond [(vector? (car e)) (λ (x) (+ (* x (vector-ref (car e) 0)) (vector-ref (car e) 1)))]
+        [(and (list? e) (number? (car e))) (λ (x) (+ (* x (car e)) (cadr e)))]
+        [(and (list? e) (list? (car e))) (λ (x) (+ (* x (caar e)) (cadar e)))]
         [else (error "don't understand input" e)]))
 
 

@@ -1,5 +1,8 @@
 #lang racket/base
-(require racket/stream
+(require racket/list
+         racket/string
+         racket/vector
+         racket/stream
          racket/generator
          racket/contract
          racket/port
@@ -12,7 +15,8 @@
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
           [csvs-in-dir (-> (or/c string? path?) (listof path?))]
-          [single-column (-> stream? number? stream?)])
+          [single-column (-> stream? number? stream?)]
+          [csv-format (-> (or/c stream? vector? (listof (or/c list? vector? stream?))) (or/c vector? stream? (listof string?)))])
          select-columns)
 
 (define (csv->list filename)
@@ -116,9 +120,14 @@
              ;; start the gen-iter
              (gen-iter (cons 0 '()))))
 
-
-;(require plot)
-;(define-syntax plot-columns
-; (syntax-rules ()
-;  [(plot-columns strm a b) (plot (points (select-columns strm a b)))]
-; [(plot-columns strm a b c) (plot3d (points3d (select-columns strm a b c)))]))
+(define (csv-format lst)  
+  (define (any->string x)
+    (cond [(number? x) (number->string x)]
+          [(string? x) x]
+          [else (error "Not a number or string:" x)]))
+  (define (array->string x)
+    (string-append 
+     (string-join (for/list ([i x]) (any->string i)) ",") 
+     (string #\, #\newline)))  
+  (for/list ([i lst])
+    (array->string i)))

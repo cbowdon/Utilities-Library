@@ -77,3 +77,17 @@
     (for ([i (in-range 1 n)])    
       (printf "~a\t~a\t" (expt 10 i) (expt 10 (- n i 1)))
       (time-repeat (fill-buffer 10000000 (expt 10 i)) #:repeat (expt 10 (- n i 1))))))
+
+(test-case
+ "csv-format"
+ (let ([list-input (list 
+                    (build-list 10 values)
+                    (list 10 11 12 13 14 15 16 "-" "-" 19))]
+       [vector-input (list 
+                      (build-vector 10 values)
+                      (vector 10 11 12 13 14 15 16 "-" "-" 19))]
+       [output (list
+                "0,1,2,3,4,5,6,7,8,9,\n"
+                "10,11,12,13,14,15,16,-,-,19,\n")])
+   (check-equal? (csv-format list-input) output)
+   (check-equal? (csv-format vector-input) output)))
