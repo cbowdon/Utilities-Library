@@ -1,5 +1,4 @@
 #lang racket/base
-(require racket/list)
 
 (provide time-repeat)
 
