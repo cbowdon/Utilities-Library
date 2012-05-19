@@ -43,7 +43,7 @@
 
 (test-case
  "select-columns"
- (let ([data (csv->stream "testdata.csv")])
+ (let ([data (csv->stream "testdata.csv" #:separators ",")])
    (check-true (stream? (select-columns data 1)))
    (check-equal? (stream-ref (select-columns data 1) 0) 27.7)
    (check-equal? (stream-ref (select-columns data 1 2) 0) (vector 27.7 34000))))

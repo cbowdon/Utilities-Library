@@ -47,10 +47,16 @@
   (generic s ss b))
 
 ;; variance
+;; var is horrendous for memory consumption
+;; fvar better - TODO: re-write with for/foldl
+;; strvar not so bad
 (define (variance . b)
   (define (var x) (/ (foldl + 0 (map (λ (y) (expt (- y (average x)) 2)) x)) (length x)))
+  (define (fvar x)    
+    (/ (for/fold ([sum 0]) ([i x]) (+ sum (sqr (- i (average x))))) 
+       (length x)))
   (define (strvar x) (/ (stream-fold + 0 (stream-map (λ (y) (expt (- y (average x)) 2)) x)) (stream-length x)))
-  (generic var strvar b))
+  (generic fvar strvar b))
 
 ;; standard deviation
 (define (st-dev . b)

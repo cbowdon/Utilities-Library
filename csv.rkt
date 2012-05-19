@@ -9,25 +9,38 @@
          lib/stream-utils)
 
 (provide (contract-out 
-          [csv->stream (-> (or/c string? path?) stream?)]
-          [csv->list (-> (or/c string? path?) stream?)]
+          [csv->stream (->* ((or/c string? path?))
+                            (#:separators string?)
+                            stream?)]
+          [csv->list (->* ((or/c string? path?))
+                          (#:separators string?)
+                          stream?)]
           [file->generator (-> (or/c string? path?) generator?)]
           [string-empty? (-> string? boolean?)]
           [string-not-empty? (-> string? boolean?)]
           [csvs-in-dir (-> (or/c string? path?) (listof path?))]
           [single-column (-> stream? number? stream?)]
-          [csv-format (-> (or/c stream? vector? (listof (or/c list? vector? stream?))) (or/c vector? stream? (listof string?)))])
-         select-columns)
+          [select-columns (->* (stream? number?)
+                               #:rest (listof number?)
+                               stream?)]
+          [csv-format (-> (or/c stream? vector? (listof (or/c list? vector? stream?))) (or/c vector? stream? (listof string?)))]
+          [display-csv (-> (or/c stream? vector? (listof (or/c list? vector? stream?))) port? void?)]
+          [write-to-csv-file (-> (or/c stream? vector? (listof (or/c list? vector? stream?)))
+                                 (or/c string? path?)
+                                 #:exists symbol?
+                                 void?)]))
 
-(define (csv->list filename)
+(define (csv->list filename #:separators [sep-expr ",|\t|\r|\n|\r\n|[:cntrl:]"])
   (define (parse-port in)
-    (map (lambda (x) (parse-by-probable-type (filter string-not-empty? (regexp-split ",|\t|\r|\n|\r\n|[:cntrl:]" x))))
+    (map (λ (x) (parse-by-probable-type (filter string-not-empty? (regexp-split sep-expr x))))
          (port->lines in)))
   (call-with-input-file filename parse-port))
 
-(define (csv->stream filename)
-  (stream-map (lambda (x) (parse-by-probable-type (filter useful-field? (regexp-split ",|\t|\r|\n|\r\n|[:cntrl:]" x))))
-              (stream-filter (λ (x) (not (eof-object? x))) (sequence->stream (in-producer (file->generator filename) 'stop)))))
+(define (csv->stream filename #:separators [sep-expr ",|\t|\r|\n|\r\n|[:cntrl:]"])
+  (stream-map (λ (x) (parse-by-probable-type (filter useful-field? (regexp-split sep-expr x))))
+              (stream-filter 
+               (λ (x) (not (eof-object? x))) 
+               (sequence->stream (in-producer (file->generator filename) 'stop)))))
 
 (define (string-empty? str)
   (equal? 0 (string-length str)))
@@ -52,7 +65,6 @@
 ; given a csv stream, extract some columns 
 ; (variable number of indices given) 
 ; as list of vectors for plotting
-
 (define (select-columns strm a . b)
   (cond [(null? b) (stream-map (λ (x) (list-ref x a)) strm)]
         [else (stream-map 
@@ -120,6 +132,8 @@
              ;; start the gen-iter
              (gen-iter (cons 0 '()))))
 
+
+;; utilities for writing to file
 (define (csv-format lst)  
   (define (any->string x)
     (cond [(number? x) (number->string x)]
@@ -131,3 +145,14 @@
      (string #\, #\newline)))  
   (for/list ([i lst])
     (array->string i)))
+
+;; UNTESTED
+(define (display-csv data out)
+  (for ([d (csv-format data)])
+    (display d out)))
+
+(define (write-to-csv-file data filename #:exists [exists 'error])
+  (call-with-output-file filename #:exists exists
+    (λ (out) (display-csv data out))))
+;; /UNTESTED
+
