@@ -24,6 +24,3 @@
                    (+ cpu-time ct)
                    (+ real-time rt)
                    (+ gc-time gt)))))]))
-
-
-(time-repeat (random 1000) #:repeat 1000000)
