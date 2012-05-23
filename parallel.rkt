@@ -6,8 +6,7 @@
          racket/future
          lib/time)
 
-(provide main
-         divide-list
+(provide divide-list
          pmap)
 
 (define (main)
