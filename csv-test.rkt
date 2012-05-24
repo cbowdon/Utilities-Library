@@ -10,14 +10,17 @@
 ;(require (planet neil/csv))
 ;
 ;(define (neil-csv) (begin (csv->list (open-input-file test-data)) #t))
-(define (lib-csv) (begin (stream->list (csv->stream test-data)) #t))
-(define (lib-csv2) (begin (csv->listx test-data) #t))
-;;
-;; where test-data is a 30MB, 114,000-line CSV file
-;;; background mem ~25,000
-;(printf "neil-csv\t~a~n" (time (neil-csv))) ;; mem 348,000
-(printf "lib-csv\t~a~n" (time (lib-csv))) ;; mem 203,000
-(printf "lib-csv2\t~a~n" (time (lib-csv2))) ;; mem 290,000 
+;(define (lib-csv-stream) (begin (stream-for-each false? (csv->stream test-data)) #t))
+;(define (lib-csv-list) (begin (for-each false? (csv->list test-data)) #t))
+;;;
+;;; where test-data is a 30MB, 114,000-line CSV file
+;;;; background mem ~25,000
+;;(printf "neil-csv\t~a~n" (time (neil-csv))) ;; mem 348,000
+;(printf "lib-csv-stream\t~a~n" (time (lib-csv-stream))) ;; mem 203,000
+;(printf "lib-csv-list\t~a~n" (time (lib-csv-list))) ;; mem 290,000 
+;
+;(printf "lib-csv-stream\t~a~n" (/ (memory-usage (lib-csv-stream)) 1e6))
+;(printf "lib-csv-list\t~a~n" (/ (memory-usage (lib-csv-list)) 1e6))
 
 ;; Profiling results (Solid State Drive):
 ;;
