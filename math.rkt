@@ -19,7 +19,10 @@
           [linear-regression (-> (listof vector?) vector?)]
           [make-linear-equation (->* () #:rest (or/c vector? list?) procedure?)]
           [column-sort (-> procedure? (listof vector?) exact-nonnegative-integer? (listof vector?))]
-          [rank (-> (listof (or/c number? (listof number?) vector?)) (listof number?))]
+          [rank (->* 
+                 ((listof (or/c number? (listof number?) vector?)))
+                 (#:column exact-nonnegative-integer?)
+                 (listof number?))]
           [pearson (-> (listof vector?) number?)]
           [spearman (-> (listof vector?) number?)]))
 
@@ -103,7 +106,7 @@
 
 
 ;; competitive ranking, with proper averages for ties
-(define (rank sorted-list)
+(define (rank sorted-list #:column [col 0])
   ;; only traverses the list once, i.e. O(n)
   ;; uses two mutually recursive functions
   ;; the first is a simple counter, until a tie (repeat) is spotted
@@ -115,8 +118,8 @@
           [(vector? (car sorted-list)) (λ (x) (vector-ref (lst-acc x) index))]          
           [(list? (car sorted-list)) (λ (x) (list-ref (lst-acc x) index))]
           [else (error "Unknown input type:" (car sorted-list))]))
-  (define get1st (accessor-type car 0))
-  (define get2nd (accessor-type cadr 0))
+  (define get1st (accessor-type car col))
+  (define get2nd (accessor-type cadr col))
   
   ;; if first two elements not equal, should return cons index+1 onto result
   ;; else should divert to when-same
@@ -181,6 +184,28 @@
   (sort list-of-vectors 
         (λ (v1 v2) (proc (vector-ref v1 column-index) (vector-ref v2 column-index)))))
 
+(define/contract (rank-each-column data)
+  (-> (listof vector) (listof vector))
+  '())
+
+(define (sort-and-rank proc data c)
+  (rank (column-sort proc data c))) 
+
+(define/contract (index lst)
+  (-> (listof vector) (listof vector))
+  (define vlen (add1 (vector-length (first lst)))) 
+  (let loop ([count 0]
+             [input lst])
+    (cond [(empty? input) '()]
+          [else            
+           (cons (build-vector 
+                  vlen 
+                  (λ (x) (if (= 0 x) count (vector-ref (first input) (sub1 x)))))
+                 (loop (add1 count)
+                       (rest input)))])))
+
+(define k (build-list 10 (λ (x) (vector (random 20) (random 20)))))
+
 (define (spearman list-of-vectors)
   (define (x-< v1 v2)
     (< (vector-ref v1 0) (vector-ref v2 0)))
@@ -189,3 +214,5 @@
     ;; do spearman sum: i.e. do pearson's on the ranks
     1.0
     ))
+
+;(for ([i (in-range 3)]) (collect-garbage))
