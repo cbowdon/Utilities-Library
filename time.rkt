@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide time-repeat)
+(provide time-repeat
+         memory-usage)
 
 ;(define-syntax time-repeat
 ;  (syntax-rules ()
@@ -23,3 +24,12 @@
                    (+ cpu-time ct)
                    (+ real-time rt)
                    (+ gc-time gt)))))]))
+
+(define-syntax memory-usage 
+  (syntax-rules ()
+    [(memory-usage expr)
+     (begin
+       (for ([i (in-range 3)]) (collect-garbage))
+       (let ([m0 (current-memory-use)])
+         expr 
+         (- (current-memory-use) m0)))]))
