@@ -3,12 +3,14 @@
 (require racket/contract
          racket/stream
          racket/vector
-         racket/list)
+         racket/list
+         lib/stream)
 
 (provide (contract-out
           [!= (-> number? number? boolean?)]
           [sqr (-> number? number?)]
           [average (->* () #:rest numeric-data/c number?)]
+          [weighted-average (-> (or/c (listof number?) stream?) (or/c (listof number?) stream?) number?)]
           [variance (->* () #:rest numeric-data/c number?)]
           [st-dev (->* () #:rest numeric-data/c number?)]
           [sum (->* () #:rest numeric-data/c number?)]
@@ -48,6 +50,10 @@
   (define (s x) (foldl + 0 x))
   (define (ss x) (stream-fold + 0 x))
   (generic s ss b))
+
+(define (weighted-average weights items)  
+  (/ (sum (stream-mapx * weights items))
+     (sum weights)))
 
 ;; variance
 ;; var is horrendous for memory consumption
@@ -117,9 +123,9 @@
     (cond [(or (empty? sorted-list) (number? (car sorted-list))) lst-acc]          
           [(vector? (car sorted-list)) (λ (x) (vector-ref (lst-acc x) index))]          
           [(list? (car sorted-list)) (λ (x) (list-ref (lst-acc x) index))]
-          [else (error "Unknown input type:" (car sorted-list))]))
-  (define get1st (accessor-type car col))
-  (define get2nd (accessor-type cadr col))
+          [else (error "Unknown input type:" (first sorted-list))]))
+  (define get1st (accessor-type first col))
+  (define get2nd (accessor-type second col))
   
   ;; if first two elements not equal, should return cons index+1 onto result
   ;; else should divert to when-same
@@ -128,12 +134,13 @@
   ;; rank+1, rest seq, cons'd results
   ;; possible states: input can be empty, no repeats or repeats
   (define (rank-iter n input result)
+    ;(printf "~a~n" (first input))
     (cond [(empty? input) (reverse result)]
           [(empty? (cdr input)) (reverse (cons n result))]
           ;; repeat found: pass directly to when-same
           [(= (get1st input) (get2nd input)) (when-same n input result (get1st input))]
           ;; no repeat: add rank=n to results, inc n, move down list
-          [else (rank-iter (add1 n) (cdr input) (cons n result))]))
+          [else (rank-iter (add1 n) (rest input) (cons n result))]))
   
   ;; should count how many similar results are in given list and return cons-repeat of their average rank
   ;; rank of first item, repeating term, input seq (inc all repeats), results to cons onto
@@ -149,8 +156,8 @@
              (rank-iter (add1 n) input (new-result n-same sum-same))]
             [else 
              ;; repeat: add to tally, inc n, move down list
-             (ws-iter (add1 n) (add1 n-same) (+ sum-same n 1) (cdr input))]))
-    (ws-iter n-of-first 1 n-of-first (cdr input-list)))
+             (ws-iter (add1 n) (add1 n-same) (+ sum-same n 1) (rest input))]))
+    (ws-iter n-of-first 1 n-of-first (rest input-list)))
   
   ;; utility: faster than appending I hope
   ;; TODO: profile vs (append (make-list n x) results)
@@ -184,12 +191,16 @@
   (sort list-of-vectors 
         (λ (v1 v2) (proc (vector-ref v1 column-index) (vector-ref v2 column-index)))))
 
-(define/contract (rank-each-column data)
-  (-> (listof vector) (listof vector))
+(define/contract (rank-each-column proc data)
+  (-> (listof vector) procedure? (listof vector))
+  ; for every column, get sort-and-rank
+  (define vlen (vector-length (first data)))
+  (for/list ([i (in-range vlen)])
+    (unsorted-rank proc data i))
   '())
 
-(define (sort-and-rank proc data c)
-  (rank (column-sort proc data c))) 
+(define (unsorted-rank proc data c)
+  (rank (column-sort proc data c) #:column c)) 
 
 (define/contract (index lst)
   (-> (listof vector) (listof vector))

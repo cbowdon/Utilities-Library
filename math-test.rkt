@@ -24,6 +24,21 @@
    (check-equal? (st-dev data) 2)))
 
 (test-case
+ "weighted-average"
+ (let ([zeff 5.232447701411555]
+       [meff 161.95259051810365]
+       [weights '(0.4 13.71 41.96 33.43 8.75 1.38 0.07 0.01 0.27)]
+       [carbons (stream->list (in-range 9 18))])
+   (define (hcMass n)
+     (+ (* 12 n) (* 2 n) 2))
+   (define (hcZeff n)
+     (/ (+ (* 12 n 6) (* 2 n) 2) 
+        (hcMass n)))
+   (check-equal? (weighted-average weights (map hcMass carbons)) meff)
+   (check-equal? (weighted-average weights (map hcZeff carbons)) zeff)))
+
+
+(test-case
  "poisson-error" 
  (check-equal? (poisson-error 100) 10)
  (check-equal? (poisson-error (build-list 10 (λ (x) 10))) 1))
