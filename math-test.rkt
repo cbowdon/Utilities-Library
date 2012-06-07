@@ -24,6 +24,10 @@
    (check-equal? (st-dev data) 2)))
 
 (test-case
+ "propagate-errors"
+ (check-equal? (propagate-errors 0.1 0.5 0.3) (sqrt (+ 0.01 0.25 0.09))))
+
+(test-case
  "weighted-average"
  (let ([zeff 5.232447701411555]
        [meff 161.95259051810365]

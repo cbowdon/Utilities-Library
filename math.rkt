@@ -14,6 +14,7 @@
           [variance (->* () #:rest numeric-data/c number?)]
           [st-dev (->* () #:rest numeric-data/c number?)]
           [sum (->* () #:rest numeric-data/c number?)]
+          [propagate-errors (->* (number?) #:rest numeric-data/c number?)]
           [poisson-error (->* () #:rest numeric-data/c number?)]
           [gauss (->* (number?)
                       (#:height number? #:mu number? #:sigma number?)
@@ -70,6 +71,10 @@
 ;; standard deviation
 (define (st-dev . b)
   (sqrt (variance (car b))))
+
+;; error propagation (a.k.a. "summing in quadrature")
+(define (propagate-errors a . b)
+  (sqrt (sum (map sqr (cons a b)))))
 
 ;; poisson-error
 (define (poisson-error . b)
